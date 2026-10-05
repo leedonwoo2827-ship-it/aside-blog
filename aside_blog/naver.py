@@ -50,10 +50,11 @@ SEL: Dict[str, Any] = {
     "layer": "[class*='layer_publish'], [class*='publish_layer'], [class*='option_publish']",
     "category_btn": "[class*='selectbox_button'], button[aria-label*='카테고리'], [class*='category'] button",
     "category_item": "[class*='option_list'] label, [class*='option_list'] li, [class*='category'] [role='option'], [class*='item'] label",
-    "open_public": "#open_public, label[for='open_public'], input[value='0'][name*='open']",
+    # ★ 라디오는 label 이 클릭을 가로챈다(2026-10-05 실측) → label 을 먼저
+    "open_public": "label[for='open_public'], label:has-text('전체공개')",
     "tag_input": "#tag-input, input[placeholder*='태그']",
-    "time_now": "#radio_time1, label[for='radio_time1']",
-    "time_reserve": "#radio_time2, label[for='radio_time2']",
+    "time_now": "label[for='radio_time1']",                                                 # 실측 ✓
+    "time_reserve": "label[for='radio_time2']",
     "date_input": "[class*='input_date'], input[class*='date']",
     "dp_title": ".ui-datepicker-title, [class*='datepicker'] [class*='title']",
     "dp_next": ".ui-datepicker-next, [class*='datepicker'] [class*='next']",
@@ -481,23 +482,38 @@ def publish_layer(s: NaverSession, fr, post: Dict[str, Any], category: str, when
         raise PostError("발행 창의 「발행」 버튼을 찾지 못했어요.")
     btn.click()
     url = ""
-    for _ in range(60):
+    for _ in range(30):
         time.sleep(1)
-        cur = page.url
-        if SEL["post_url"].search(cur) and cur != before:
-            url = cur
-            break
         try:
-            inner = page.frame(name=SEL["frame"])
-            if inner is not None and SEL["post_url"].search(inner.url):
-                url = inner.url
-                break
+            urls = [page.url] + [f.url for f in page.frames]
         except Exception:
-            pass
+            urls = []
+        hit = next((u for u in urls if SEL["post_url"].search(u) and u != before), "")
+        if hit:
+            url = hit
+            break
     s.shot("published")
+    if not url and not when:
+        url = rss_lookup(blog_of(s.acc), post["title"])
     m = SEL["post_url"].search(url or "")
     return {"url": url, "log_no": (m.group(1) or m.group(2)) if m else "", "at": datetime.now().isoformat(timespec="seconds"),
             "scheduled_for": when.strftime("%Y-%m-%d %H:%M") if when else None, "title": post["title"]}
+
+
+def rss_lookup(blog: str, title: str, tries: int = 6) -> str:
+    """발행한 글 주소 — 화면에서 못 읽으면 블로그 공개 RSS 에서 같은 제목을 찾는다(2026-10-05 실측으로 확인)."""
+    import urllib.request
+    want = re.sub(r"\s+", "", title)
+    for k in range(tries):
+        try:
+            x = urllib.request.urlopen(f"https://rss.blog.naver.com/{blog}.xml", timeout=10).read().decode("utf-8", "replace")
+            for t, link in re.findall(r"<item>.*?<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?</title>.*?<link>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?</link>", x, re.S):
+                if re.sub(r"\s+", "", _html.unescape(t)) == want:
+                    return link.split("?")[0]
+        except Exception as e:      # noqa: BLE001
+            detail(f"  RSS 확인 실패: {e}")
+        time.sleep(5 + 5 * k)
+    return ""
 
 
 # ── 바깥에서 부르는 것 ───────────────────────────────────────────────────────
