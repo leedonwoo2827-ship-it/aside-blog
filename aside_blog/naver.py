@@ -588,8 +588,8 @@ def open_login(acc: Dict[str, Any]) -> None:
             place(int(acc["port"]), "left")
         except Exception:
             pass
-    log(f"왼쪽 Chrome 창에서 네이버에 로그인해 주세요 (블로그: blog.naver.com/{blog}). "
-        "「로그인 상태 유지」를 켜 두면 다음부터는 안 물어봐요. 창은 닫지 않아도 돼요.")
+    log(f"왼쪽 Chrome 창에서 네이버에 로그인해 주세요 (블로그: blog.naver.com/{blog}).")
+    log("  ★ 로그인할 때 「로그인 상태 유지」를 꼭 켜 주세요 — 안 켜면 이 창을 닫을 때 로그인이 풀려서 예약이 안 걸려요.")
 
 
 def status(acc: Dict[str, Any]) -> Dict[str, Any]:

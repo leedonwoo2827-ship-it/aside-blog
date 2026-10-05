@@ -330,7 +330,12 @@ def cmd_plan(a) -> None:
     if not a.apply:
         log(f"미리보기예요 — 적용하려면 「예약 걸기」 ({len(left)}건, 계정 {acc['name']})")
         return
-    ok = 0
+    if native:
+        from . import naver
+        st = naver.status(acc) if naver.port_open(int(acc["port"])) else {"logged_in": None}
+        if st.get("logged_in") is False:
+            raise SystemExit("✗ 네이버 로그인이 풀려 있어요. 대시보드 ④ 「로그인 창 열기」로 로그인(「로그인 상태 유지」 체크)한 뒤 다시 예약해 주세요.")
+    ok, bad = 0, []
     for cid, when in zip(left, slots):
         if native:
             ns = argparse.Namespace(job=job.name, only=cid, account=acc["name"], at=when.strftime(schedule.FMT),
@@ -338,12 +343,19 @@ def cmd_plan(a) -> None:
             try:
                 cmd_post(ns)
                 ok += 1
-            except SystemExit as e:     # 한 편이 실패해도 다음 편으로
+            except SystemExit as e:     # 한 편이 실패해도 다음 편으로 — 단, 로그인 문제면 바로 멈춘다
+                bad.append(cid)
                 log(f"  ✗ {cid}: {e}")
+                if "로그인" in str(e):
+                    log("✗ 네이버 로그인이 필요해서 나머지 예약은 멈췄어요. 로그인한 뒤 다시 눌러 주세요.")
+                    raise SystemExit(1)
         else:
             schedule.enqueue(job, cid, when, acc["name"])
             ok += 1
-    log(f"예약 {ok}건을 걸었어요 ({'네이버 예약 발행' if native else '이 프로그램의 예약'}).")
+    log(f"예약 {ok}건을 걸었어요 ({'네이버 예약 발행' if native else '이 프로그램의 예약'})."
+        + (f" 못 건 글 {len(bad)}개: {', '.join(bad)}" if bad else ""))
+    if bad:
+        raise SystemExit(1)
 
 
 def cmd_queue(_a=None) -> None:
