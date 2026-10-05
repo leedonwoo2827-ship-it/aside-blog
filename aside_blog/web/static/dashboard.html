@@ -175,10 +175,10 @@ iframe.cardf{width:100%;height:640px;border:1px solid var(--line);border-radius:
     <div class="row">
       <label class="opt">패턴 <select id="p-pat"></select></label>
       <label class="opt">시작 날짜 <input type="date" id="p-start"></label>
-      <label class="opt">몇 개 <input type="number" id="p-n" value="14" min="1" max="200" style="width:70px"></label>
+      <label class="opt">앞에서 <input type="number" id="p-n" value="10" min="1" max="200" style="width:64px"></label><button class="b" id="p-first">개 고르기</button><button class="b" id="p-none">해제</button>
       <button class="b" id="p-preview">추천 보기</button><button class="b p" id="p-apply">이대로 예약 걸기</button>
       <span class="mini" id="p-info"></span></div>
-    <div class="scroll" style="margin-top:10px"><table><thead><tr><th>시각</th><th>글</th></tr></thead><tbody id="p-rows"></tbody></table></div>
+    <div class="scroll" style="margin-top:10px"><table><thead><tr><th><input type="checkbox" id="p-all"></th><th></th><th>글</th><th>예약 시각</th></tr></thead><tbody id="p-rows"></tbody></table></div>
   </div>
   <div class="card">
     <h2>예약·발행 기록</h2>
@@ -425,6 +425,7 @@ async function viewPub() {
   document.querySelectorAll("[data-login]").forEach(b => b.onclick = () => api(`/api/accounts/${b.dataset.login}/login`, {method: "POST"}).then(pollLog));
   const pats = await api("/api/patterns");
   if (!$("#p-pat").options.length) $("#p-pat").innerHTML = pats.items.map(x => `<option value="${x.key}" ${x.key === pats.current ? "selected" : ""}>${esc(x.label)}</option>`).join("");
+  loadReady();
   const sc = await api("/api/schedule");
   $("#s-rows").innerHTML = sc.length ? sc.map(r => `<tr><td>${esc(r.when)}</td><td>${esc(r.title)} <span class="mini">${esc(r.job)}</span></td>
       <td>${r.posted ? "발행" : r.mode === "native" ? "네이버 예약" : "이 프로그램 예약"}</td>
@@ -434,17 +435,37 @@ async function viewPub() {
   document.querySelectorAll("[data-cancel]").forEach(b => b.onclick = async () => { const [j, id] = b.dataset.cancel.split("|");
     await api(`/api/schedule/${j}/${id}`, {method: "DELETE"}); viewPub() });
 }
+let P = {ready: [], pick: null, when: {}};
+async function loadReady() {
+  P.ready = S.job ? await api(`/api/jobs/${S.job}/ready`) : [];
+  if (P.pick === null) P.pick = new Set(P.ready.slice(0, 10).map(r => r.id));
+  P.pick = new Set([...P.pick].filter(id => P.ready.find(r => r.id === id)));
+  if (!$("#p-start").value) $("#p-start").value = new Date(Date.now() + 864e5).toISOString().slice(0, 10);
+  drawReady();
+}
+function drawReady() {
+  $("#p-rows").innerHTML = P.ready.length ? P.ready.map(r => `<tr><td><input type="checkbox" data-pp="${r.id}" ${P.pick.has(r.id) ? "checked" : ""}></td>
+      <td>${r.cover ? `<span class="thumb" style="background-image:url('${r.cover}')"></span>` : ""}</td><td>${esc(r.title)}</td>
+      <td>${P.when[r.id] ? `<b style="color:var(--nav)">${esc(P.when[r.id])}</b>` : ""}</td></tr>`).join("")
+    : `<tr><td colspan="4"><div class="empty">예약할 글이 없어요 (글이 있고 아직 올리지 않은 것만 나와요)</div></td></tr>`;
+  document.querySelectorAll("[data-pp]").forEach(c => c.onchange = () => { c.checked ? P.pick.add(c.dataset.pp) : P.pick.delete(c.dataset.pp); P.when = {}; drawReady() });
+  $("#p-info").textContent = `${P.pick.size}/${P.ready.length}개 골랐어요`;
+}
 async function planCall(apply) {
   if (!S.job) return alert("작업을 먼저 골라 주세요");
   if (!S.state.current) return alert("네이버 계정을 먼저 추가해 주세요");
-  const ready = await api(`/api/jobs/${S.job}/ready`);
-  const ids = ready.slice(0, +$("#p-n").value || 14).map(r => r.id);
-  if (!ids.length) return alert("올릴 준비가 된 글이 없어요 — ② 만들기에서 「딸깍」을 먼저 눌러 주세요");
-  if (apply && !confirm(`${ids.length}개 글을 네이버에 예약 발행으로 걸어요. 왼쪽 네이버 창에서 하나씩 진행돼요 (글 하나에 1~2분). 진행할까요?`)) return;
+  const ids = P.ready.map(r => r.id).filter(id => P.pick.has(id));
+  if (!ids.length) return alert("올릴 글을 체크해 주세요");
+  if (apply && !confirm(`${ids.length}개 글을 예약해요. 왼쪽 네이버 창에서 한 편씩 진행돼요 (한 편에 1~2분). 진행할까요?`)) return;
   const out = await api("/api/plan", {method: "POST", body: {job: S.job, account: S.state.current, apply, ids, pattern: $("#p-pat").value, start: $("#p-start").value}});
-  $("#p-rows").innerHTML = out.map(r => `<tr><td>${esc(r.when)} (${r.dow})</td><td>${esc(r.title)}</td></tr>`).join("");
-  $("#p-info").textContent = apply ? "예약을 거는 중이에요 — 아래 로그를 봐 주세요" : `${out.length}개 추천 · 올릴 준비된 글 ${ready.length}개`;
+  P.when = Object.fromEntries(out.map(r => [r.data_id, `${r.when} (${r.dow})`]));
+  drawReady();
+  if (apply) { P.pick = new Set(); $("#p-info").textContent = "예약을 거는 중이에요 — 아래 로그를 봐 주세요"; pollLog() }
 }
+$("#p-first").onclick = () => { P.pick = new Set(P.ready.slice(0, +$("#p-n").value || 10).map(r => r.id)); P.when = {}; drawReady() };
+$("#p-none").onclick = () => { P.pick = new Set(); P.when = {}; drawReady() };
+$("#p-all").onchange = e => { P.pick = new Set(e.target.checked ? P.ready.map(r => r.id) : []); P.when = {}; drawReady() };
+$("#p-pat").onchange = $("#p-start").onchange = () => { P.when = {}; drawReady() };
 $("#p-preview").onclick = () => planCall(false);
 $("#p-apply").onclick = () => planCall(true);
 $("#a-add").onclick = async () => { await api("/api/accounts", {method: "POST", body: {name: $("#a-name").value.trim(), blog_id: $("#a-blog").value.trim()}}); await loadState(); viewPub() };
@@ -495,7 +516,7 @@ function tab(t) {
 }
 function refresh() { return ({src: viewSrc, dash: viewDash, view: viewView, pub: viewPub, goal: viewGoal}[S.tab] || viewDash)() }
 document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => tab(b.dataset.tab));
-$("#job").onchange = e => { S.job = e.target.value; LS.set("job", S.job); S.sel = null; S.rows = null; S.picked.clear(); refresh() };
+$("#job").onchange = e => { S.job = e.target.value; LS.set("job", S.job); S.sel = null; S.rows = null; S.picked.clear(); P.pick = null; P.when = {}; refresh() };
 $("#loginClose").onclick = () => $("#loginBar").classList.add("hide");
 $("#btnStop").onclick = () => api("/api/stop", {method: "POST"});
 $("#btnClr").onclick = () => { $("#log").textContent = "" };

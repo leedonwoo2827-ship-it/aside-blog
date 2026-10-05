@@ -55,7 +55,22 @@ ol{padding-left:18px;margin:4px 0}li{margin:3px 0}
     <div class="box" id="detail"></div>
     <div class="box"><h3>글 목록 <span class="mini" id="cnt"></span></h3><div id="list"></div></div>
   </section>
-  <section id="t-sched" class="hide"><div class="box" id="sched"></div></section>
+  <section id="t-sched" class="hide">
+    <div class="box">
+      <h3>일괄 예약 <span class="mini">패턴을 고르고 올릴 글을 체크하세요</span></h3>
+      <div class="mini" style="font-weight:700;margin:4px 0 3px">패턴</div>
+      <select id="b-pat" style="width:100%"></select>
+      <div class="mini" style="font-weight:700;margin:8px 0 3px">시작 날짜</div>
+      <input type="date" id="b-start" style="width:100%">
+      <div class="row" style="margin-top:10px;justify-content:space-between"><span class="mini" style="font-weight:700">올릴 글 <span id="b-cnt"></span></span>
+        <span class="row"><span class="mini">앞에서</span><input type="number" id="b-n" value="10" min="1" max="200" style="width:56px"><button class="b" id="b-first" style="padding:3px 8px">개 고르기</button>
+        <button class="b" id="b-none" style="padding:3px 8px">해제</button></span></div>
+      <div id="b-list" style="max-height:340px;overflow:auto;margin-top:6px"></div>
+      <div class="row" style="margin-top:10px"><button class="b" id="b-prev">미리보기</button><button class="b n" id="b-apply">이대로 예약</button></div>
+      <div class="mini" style="margin-top:6px" id="b-note"></div>
+    </div>
+    <div class="box" id="sched"></div>
+  </section>
   <section id="t-help" class="hide"><div class="box">
     <h3>이렇게 써요</h3>
     <ol>
@@ -132,9 +147,49 @@ async function detail() {
     document.querySelectorAll(".tabsel").forEach(e => e.onclick = () => { S.tab = +e.dataset.tab; document.querySelectorAll(".tabsel").forEach(x => x.classList.toggle("on", x === e)); $("#bFill").disabled = false }) };
   $("#bFill").onclick = () => api("/api/fill", {method: "POST", body: {job: S.job, data_id: S.sel, account: S.st.current, tab: S.tab}}).then(poll);
 }
+// ── 일괄 예약 (aside-shorts 패널과 같은 모양) ──
+let B = {ready: [], pick: null, when: {}};
+const tomorrow = () => { const d = new Date(Date.now() + 864e5); return d.toISOString().slice(0, 10) };
+async function bulk() {
+  const pats = await api("/api/patterns");
+  if (!$("#b-pat").options.length) $("#b-pat").innerHTML = pats.items.map(x => `<option value="${x.key}" ${x.key === pats.current ? "selected" : ""}>${esc(x.label)}</option>`).join("");
+  if (!$("#b-start").value) $("#b-start").value = tomorrow();
+  $("#b-note").textContent = S.st.native ? "네이버 발행 창의 「예약」으로 한 편씩 걸어 두고, 정한 시각에 발행돼요(PC 꺼져도 됨). 한 편에 1~2분씩 걸려요."
+    : "이 프로그램이 정한 시각에 올려요 — 그때 PC 와 이 프로그램이 켜져 있어야 해요.";
+  B.ready = S.job ? await api(`/api/jobs/${S.job}/ready`) : [];
+  if (B.pick === null) B.pick = new Set(B.ready.slice(0, 10).map(r => r.id));
+  B.pick = new Set([...B.pick].filter(id => B.ready.find(r => r.id === id)));
+  drawBulk();
+}
+function drawBulk() {
+  $("#b-cnt").textContent = `— ${B.pick.size}/${B.ready.length}개`;
+  $("#b-list").innerHTML = B.ready.length ? B.ready.map(r => `<label class="it" style="cursor:pointer">
+      <input type="checkbox" data-b="${r.id}" ${B.pick.has(r.id) ? "checked" : ""}><span class="th" style="background-image:url('${r.cover}')"></span>
+      <div><b>${esc(r.title)}</b>${B.when[r.id] ? `<span style="color:var(--nav);font-weight:700">⏰ ${esc(B.when[r.id])}</span>` : ""}</div></label>`).join("")
+    : '<div class="mini" style="border:1px dashed var(--line);border-radius:8px;padding:16px;text-align:center">예약할 글이 없어요 (글이 있고 아직 올리지 않은 것만 나와요)</div>';
+  document.querySelectorAll("[data-b]").forEach(c => c.onchange = () => { c.checked ? B.pick.add(c.dataset.b) : B.pick.delete(c.dataset.b); B.when = {}; drawBulk() });
+  $("#b-apply").disabled = !B.pick.size; $("#b-prev").disabled = !B.pick.size;
+}
+async function bulkPlan(apply) {
+  if (!S.st.current) return alert("네이버 계정을 먼저 추가해 주세요 (대시보드 ④)");
+  const ids = B.ready.map(r => r.id).filter(id => B.pick.has(id));
+  if (!ids.length) return;
+  if (apply && !confirm(`${ids.length}개 글을 예약해요. 왼쪽 네이버 창에서 한 편씩 진행돼요 (한 편에 1~2분). 진행할까요?`)) return;
+  const out = await api("/api/plan", {method: "POST", body: {job: S.job, account: S.st.current, apply, ids, pattern: $("#b-pat").value, start: $("#b-start").value}});
+  B.when = Object.fromEntries(out.map(r => [r.data_id, `${r.when.slice(5)} (${r.dow})`]));
+  drawBulk();
+  if (apply) { B.pick = new Set(); poll() }
+}
+$("#b-first").onclick = () => { B.pick = new Set(B.ready.slice(0, +$("#b-n").value || 10).map(r => r.id)); B.when = {}; drawBulk() };
+$("#b-none").onclick = () => { B.pick = new Set(); B.when = {}; drawBulk() };
+$("#b-prev").onclick = () => bulkPlan(false);
+$("#b-apply").onclick = () => bulkPlan(true);
+$("#b-pat").onchange = $("#b-start").onchange = () => { B.when = {}; drawBulk() };
+
 async function sched() {
+  bulk();
   const sc = await api("/api/schedule");
-  $("#sched").innerHTML = `<h3>예약·발행</h3>` + (sc.map(r => `<div class="it" style="cursor:default"><div><b>${esc(r.when)}</b> <span class="tag ${r.posted ? "posted" : "scheduled"}">${r.posted ? "발행" : r.mode === "native" ? "네이버 예약" : "이 프로그램"}</span>
+  $("#sched").innerHTML = `<h3>예약·올린 기록</h3>` + (sc.map(r => `<div class="it" style="cursor:default"><div><b>${esc(r.when)}</b> <span class="tag ${r.posted ? "posted" : "scheduled"}">${r.posted ? "발행" : r.mode === "native" ? "네이버 예약" : "이 프로그램"}</span>
       <span style="display:block">${esc(r.title)}</span>${r.error ? `<span style="color:var(--bad)">${esc(r.error)}</span>` : ""}</div></div>`).join("") || '<div class="mini">아직 없어요</div>');
 }
 let logNext = 0, wasBusy = false;
@@ -145,7 +200,7 @@ async function poll() {
   const st = $("#logst");
   st.textContent = r.busy ? `⏳ ${r.label} 하는 중…` : r.code == null ? "대기 중" : r.code === 0 ? "✓ 다 됐어요" : r.code === -1 ? "■ 멈춤" : "✗ 중간에 멈췄어요";
   st.className = r.busy ? "run" : r.code === 0 ? "ok" : r.code > 0 ? "bad" : "";
-  if (wasBusy && !r.busy) { list(); who() }
+  if (wasBusy && !r.busy) { list(); who(); if (!$("#t-sched").classList.contains("hide")) sched() }
   wasBusy = r.busy;
 }
 setInterval(poll, 1000);
@@ -154,7 +209,7 @@ document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => {
   ["posts", "sched", "help"].forEach(t => $("#t-" + t).classList.toggle("hide", t !== b.dataset.t));
   if (b.dataset.t === "sched") sched();
 });
-$("#job").onchange = e => { S.job = e.target.value; LS.set("job", S.job); S.sel = null; list() };
+$("#job").onchange = e => { S.job = e.target.value; LS.set("job", S.job); S.sel = null; B.pick = null; B.when = {}; list(); if (!$("#t-sched").classList.contains("hide")) sched() };
 $("#acc").onchange = async e => { await api(`/api/accounts/${e.target.value}/use`, {method: "POST"}); await loadState(); who() };
 $("#bArr").onclick = () => api("/api/arrange", {method: "POST", body: {account: S.st.current || ""}});
 $("#btnStop").onclick = () => api("/api/stop", {method: "POST"});
