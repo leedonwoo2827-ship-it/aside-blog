@@ -38,14 +38,15 @@ SEL: Dict[str, Any] = {
     "editor": ".se-content, .se-wrap, #SE-root",
     "draft_cancel": ".se-popup-button-cancel",              # 「작성 중인 글이 있습니다」 → 취소(새 글)
     "help_close": ".se-help-panel-close-button, button[class*='close'][class*='help']",
-    "title": ".se-documentTitle .se-text-paragraph, .se-title-text .se-text-paragraph, .se-section-documentTitle .se-text-paragraph",
-    "body_para": ".se-main-container .se-component.se-text .se-text-paragraph",
-    "component": ".se-main-container .se-component",
-    "image_comp": ".se-main-container .se-component.se-image",
-    "photo_btn": "button.se-image-toolbar-button, button[data-name='image']",
+    "title": ".se-documentTitle .se-text-paragraph, .se-title-text .se-text-paragraph",      # 실측 ✓
+    # ★ 2026-10-05 실측: 본문 상자는 article.se-components-wrap (예전 이름 .se-main-container 는 없음)
+    "body_para": ".se-components-wrap .se-component.se-text .se-text-paragraph",
+    "component": ".se-components-wrap .se-component:not(.se-documentTitle)",
+    "image_comp": ".se-components-wrap .se-component.se-image",
+    "photo_btn": "button.se-image-toolbar-button",                                          # 실측 ✓ 「사진」
     "photo_file": "input[type=file][accept*='image'], input#hidden-file",
-    "quote_btn": "button.se-insert-quotation-default-toolbar-button, button.se-quotation-toolbar-button, button[data-name='quotation']",
-    "publish_open": "button[class*='publish_btn'], button[data-click-area='tpb.publish']",
+    "quote_btn": "button.se-insert-quotation-default-toolbar-button",                      # 실측 ✓
+    "publish_open": "button[class*='publish_btn']",                                          # 실측 ✓ publish_btn__v_kS9
     "layer": "[class*='layer_publish'], [class*='publish_layer'], [class*='option_publish']",
     "category_btn": "[class*='selectbox_button'], button[aria-label*='카테고리'], [class*='category'] button",
     "category_item": "[class*='option_list'] label, [class*='option_list'] li, [class*='category'] [role='option'], [class*='item'] label",
@@ -153,8 +154,9 @@ def _guard_dialogs(page) -> None:
     def _on(d):
         try:
             detail(f"  확인 창: {d.type} {d.message[:80]}")
-            # 「작성 중인 글을 이어서 쓸까요」 류는 취소, 「떠나시겠습니까」 도 취소(글을 지키는 쪽)
-            d.dismiss()
+            # 「이 페이지를 나가시겠습니까」(beforeunload)는 나간다 — 쓰던 글은 네이버가 임시저장해 둔다.
+            # 그 밖의 확인 창은 취소(글을 지키는 쪽)
+            d.accept() if d.type == "beforeunload" else d.dismiss()
         except Exception:
             pass
     page.on("dialog", _on)
@@ -233,8 +235,10 @@ def caret_end(fr, page) -> None:
 
 
 def _text_len(fr) -> int:
+    """제목을 뺀 본문 글자 수 — 붙여넣기가 먹었는지 확인할 때."""
     try:
-        return len(fr.locator(".se-main-container").inner_text(timeout=3_000))
+        return int(fr.evaluate("""() => [...document.querySelectorAll('.se-components-wrap .se-component.se-text')]
+              .reduce((n, e) => n + e.innerText.trim().length, 0)"""))
     except Exception:
         return 0
 
