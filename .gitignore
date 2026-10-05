@@ -1,0 +1,20 @@
+# venv / caches
+.venv/
+__pycache__/
+*.pyc
+
+# _ 로 시작하는 폴더(_context 교재·카드 원본, _skill, _video 등)는 올리지 않는다
+_*/
+
+# per-PC settings and Naver login cookies - NEVER commit
+local.json
+aside.config.local.json
+profiles/
+
+# job outputs and real input samples (keep only the empty example)
+jobs/*
+!jobs/example/
+jobs/*/job.local.json
+
+logs/
+templates/fonts/

@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>aside-blog 대시보드</title>
+<style>
+:root{--bg:#F6F1E8;--card:#fff;--ink:#1d2433;--sub:#64748b;--line:#e5ded2;--pri:#03A94D;--pri2:#9fe3bb;--nav:#1F4E79;--ok:#0f766e;--warn:#b45309;--bad:#b91c1c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard Variable",Pretendard,"Malgun Gothic",sans-serif;font-size:14px}
+header{display:flex;align-items:center;gap:14px;padding:10px 20px;background:var(--nav);color:#fff;position:sticky;top:0;z-index:5;flex-wrap:wrap}
+header b.brand{font-size:17px;letter-spacing:-.02em}
+header b.brand i{font-style:normal;background:var(--pri);border-radius:6px;padding:1px 7px;margin-right:6px}
+header select{background:#fff;color:var(--ink);min-width:220px}
+.tabs{display:flex;gap:4px;margin-left:auto}
+.tabs button{border:none;background:transparent;color:#dbe7f3;font:inherit;font-weight:700;padding:7px 13px;border-radius:8px;cursor:pointer}
+.tabs button.on{background:#fff;color:var(--nav)}
+.who{font-size:12.5px;display:flex;gap:10px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;background:#94a3b8;display:inline-block;margin-right:4px}
+.dot.on{background:#4ade80}.dot.off{background:#f87171}
+main{padding:18px 20px calc(var(--logh,170px) + 30px);max-width:1500px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+h2{font-size:15px;margin:0 0 10px;color:var(--nav)}
+.mini{font-size:12px;color:var(--sub);font-weight:500}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+button.b,a.b,label.b{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 11px;cursor:pointer;font:inherit;font-weight:600;color:var(--ink);text-decoration:none;white-space:nowrap;display:inline-block}
+button.b:hover,a.b:hover,label.b:hover{border-color:var(--pri2)}
+button.p{background:var(--pri);color:#fff;border-color:var(--pri)}
+button.n{background:var(--nav);color:#fff;border-color:var(--nav)}
+button.s{padding:3px 8px;font-size:12px}
+button:disabled{opacity:.45;cursor:not-allowed}
+input,select,textarea{font:inherit;border:1px solid var(--line);border-radius:8px;padding:5px 8px;background:#fff;color:var(--ink)}
+textarea{width:100%;resize:vertical;line-height:1.5}
+label.opt{display:flex;gap:5px;align-items:center;color:var(--sub)}
+.stages{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.stage{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fffdf9;display:flex;flex-direction:column}
+.stage.run{border-color:#f59e0b;box-shadow:0 0 0 2px #fde68a}
+.stage .t{font-weight:800}.stage .t small{color:var(--sub);font-weight:600;margin-left:4px}
+.stage p{margin:6px 0 8px;color:var(--sub);font-size:12.5px;line-height:1.45;flex:1}
+table{width:100%;border-collapse:collapse}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+th{font-size:12px;color:var(--sub);font-weight:700;background:#faf7f1;position:sticky;top:0}
+tr:hover td{background:#fffcf6}
+.ok{color:var(--ok);font-weight:700}.no{color:#cbd5e1}.warn{color:var(--warn);font-weight:700}.bad{color:var(--bad);font-weight:700}
+.tag{font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 8px;background:#EEE7DA;white-space:nowrap}
+.tag.ready{background:#DDF1E6;color:var(--ok)}.tag.scheduled{background:#FFF1D6;color:var(--warn)}
+.tag.posted{background:#03A94D;color:#fff}.tag.error{background:#FBE3DC;color:var(--bad)}.tag.post{background:#DDEBF7;color:var(--nav)}
+.thumb{width:54px;height:36px;border-radius:5px;background:#EEE7DA center/cover no-repeat;display:block}
+.hide{display:none!important}
+.scroll{max-height:560px;overflow:auto}
+.grid-view{display:grid;grid-template-columns:270px minmax(360px,1fr) 380px;gap:14px;align-items:start}
+.list{max-height:calc(100vh - var(--logh,170px) - 120px);overflow:auto}
+.list .it{padding:7px 10px;border-radius:8px;cursor:pointer;border:1px solid transparent}
+.list .it:hover{background:#faf7f1}.list .it.on{background:#eaf7ef;border-color:var(--pri2)}
+.list .it b{display:block;font-size:13px}.list .it span{color:var(--sub);font-size:12px}
+.blog{max-width:700px;margin:0 auto;font-size:15.5px;line-height:1.8;color:#222}
+.blog h1{font-size:26px;line-height:1.4;margin:6px 0 18px;border-bottom:1px solid #eee;padding-bottom:14px}
+.blog .hd{font-size:19px;font-weight:800;margin:26px 0 8px}
+.blog img{max-width:100%;display:block;margin:12px auto;border-radius:4px}
+.blog ul{padding-left:22px;margin:6px 0}.blog p{margin:6px 0}
+.blog blockquote{margin:18px 0;padding:14px 18px;border-left:4px solid var(--pri);background:#f6fbf8;font-weight:700}
+.blog .sm{font-size:13px;color:#8a909c}
+.blog .tagsx span{display:inline-block;color:#03A94D;margin-right:8px;font-size:13.5px}
+.blog .slot{border:2px dashed #cbd5e1;border-radius:8px;padding:16px;text-align:center;color:var(--sub);font-size:13px;margin:12px 0}
+label.f{display:block;font-size:12px;font-weight:700;color:var(--nav);margin:10px 0 4px}
+.count{float:right;font-weight:600;color:var(--sub)}.count.over{color:var(--bad)}
+.blk{border-left:3px solid var(--line);padding-left:8px;margin-top:8px}
+.blk .k{font-size:11px;color:var(--sub);font-weight:700}
+.imgs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.im .ph{aspect-ratio:3/2;border-radius:8px;border:1px solid var(--line);background:#efe9dd center/cover no-repeat}
+.form{display:grid;grid-template-columns:170px 1fr;gap:8px 14px;align-items:center;max-width:960px}
+.form label{color:var(--sub);font-weight:600}
+#logbox{position:fixed;left:0;right:0;bottom:0;height:var(--logh,170px);background:#1E293B;color:#E2E8F0;
+  font:12.5px/1.45 Consolas,"D2Coding",monospace;display:flex;flex-direction:column;z-index:20;box-shadow:0 -6px 18px rgba(30,41,59,.18)}
+#grip{height:12px;flex:none;cursor:ns-resize;display:flex;align-items:center;justify-content:center;background:#16202F}
+#grip::before{content:"";width:46px;height:4px;border-radius:2px;background:#475569}
+#logbox .hd{flex:none;display:flex;justify-content:space-between;align-items:center;color:#94A3B8;padding:4px 14px;gap:8px}
+#logst.run{color:#FBBF24}#logst.ok{color:#4ADE80}#logst.bad{color:#F87171}
+#log{flex:1;overflow:auto;white-space:pre-wrap;padding:0 14px 8px}
+#logbox button{background:#334155;border:1px solid #475569;color:#fff;border-radius:6px;padding:1px 9px;font-size:11.5px;cursor:pointer}
+#loginBar{position:fixed;right:20px;bottom:calc(var(--logh,170px) + 12px);z-index:30;background:#FFF7E0;border:1px solid #F2D27A;border-radius:12px;padding:10px 14px;box-shadow:0 6px 18px rgba(30,41,59,.18)}
+.empty{padding:28px 10px;text-align:center;color:var(--sub);border:1px dashed var(--line);border-radius:12px}
+code{background:#f1ede4;border-radius:4px;padding:1px 5px;word-break:break-all}
+iframe.cardf{width:100%;height:640px;border:1px solid var(--line);border-radius:10px;background:#f4f5f7}
+</style>
+</head>
+<body>
+<header>
+  <b class="brand"><i>N</i>aside · Blog</b>
+  <select id="job" title="작업(교재 한 권)"></select>
+  <span class="who"><span><span class="dot" id="cxdot"></span><span id="cxtxt">Codex …</span></span>
+    <span><span class="dot" id="nvdot"></span><span id="nvtxt">네이버 …</span></span></span>
+  <nav class="tabs">
+    <button data-tab="src">① 교재·카드</button>
+    <button data-tab="dash" class="on">② 만들기</button>
+    <button data-tab="view">③ 결과 보기</button>
+    <button data-tab="pub">④ 올리기·예약</button>
+    <button data-tab="goal">설정</button>
+  </nav>
+</header>
+
+<main>
+<!-- ── ① 교재·카드 ── -->
+<section id="tab-src" class="hide">
+  <div class="card">
+    <h2>새 작업 만들기 <span class="mini">— 교재 한 권 = 작업 하나. 학습카드 1장이 블로그 글 1개가 돼요</span></h2>
+    <div class="form">
+      <label>작업 이름</label><div class="row"><input id="nj-name" placeholder="영문·숫자 (예: vb2026)" size="20"><span class="mini">폴더 이름이 돼요</span></div>
+      <label>교재 PDF</label><div class="row"><input id="nj-pdf" placeholder="PDF 경로 (비우면 카드 폴더만)" style="flex:1;min-width:360px"><button class="b" id="nj-pdf-pick">고르기</button></div>
+      <label>학습카드 폴더</label><div class="row"><input id="nj-cards" placeholder="이미 만든 카드 폴더 (00_목차.html 이 있는 곳) — 비우면 교재에서 새로 만들어요" style="flex:1;min-width:360px"><button class="b" id="nj-cards-pick">고르기</button></div>
+      <label>제목</label><input id="nj-title" placeholder="예: 변액보험 학습카드">
+      <label>블로그 카테고리</label><input id="nj-cat" placeholder="예: 변액보험판매관리사 133제">
+      <span></span><div class="row"><button class="b p" id="nj-go">작업 만들기</button>
+        <span class="mini">PDF 와 카드 폴더를 <b>둘 다</b> 고르면, 그 카드를 교재의 결과물로 바로 넣어요 (Codex 안 씀)</span></div>
+    </div>
+  </div>
+  <div class="card" id="src-info"></div>
+  <div class="card">
+    <div class="row" style="margin-bottom:8px"><h2 style="margin:0">교재 목차 <span class="mini" id="toc-sum"></span></h2><span style="flex:1"></span>
+      <button class="b" data-run1="extract">교재에서 글 뽑기</button>
+      <button class="b p" data-run1="s0-cards">학습카드 만들기 (Codex)</button>
+      <button class="b" data-run1="render">카드 다시 굽기</button>
+      <a class="b" id="toc-open" target="_blank">카드 목차 열기</a></div>
+    <div class="scroll"><table><thead><tr><th>조각</th><th>장 · 절</th><th>소단원</th><th>줄</th><th>카드</th></tr></thead><tbody id="toc-rows"></tbody></table></div>
+  </div>
+</section>
+
+<!-- ── ② 만들기 ── -->
+<section id="tab-dash">
+  <div class="card" style="background:#eaf7ef;border-color:var(--pri2)"><b style="color:var(--ok)">순서</b>
+    <span class="mini" style="color:var(--ink)">① 교재·카드 → <b>② 여기서 「딸깍 만들기」(글 쓰기 → 그림 → 카드 그림·표지)</b> → ③ 결과 보기에서 확인·고치기 → ④ 올리기·예약</span></div>
+  <div class="card">
+    <h2>실행 옵션 <span class="mini">— 아래 단계 버튼에 같이 적용돼요</span></h2>
+    <div class="row">
+      <label class="opt">카드 <input id="o-only" placeholder="비우면 전체 · 예: 1-1-01,3-2-03" size="28"></label>
+      <label class="opt"><input id="o-force" type="checkbox"> 다시 만들기</label>
+      <label class="opt" title="Codex 그림은 몇 장만 먼저 그려 톤 확인"><input id="o-limit" type="checkbox"> 그림은 3장만</label>
+      <label class="opt" title="Codex 없이 카드 내용 그대로 글을 조립(로그인 전 미리보기)"><input id="o-offline" type="checkbox"> Codex 없이(카드 그대로)</label>
+    </div>
+  </div>
+  <div class="card"><h2>단계</h2><div class="stages" id="stages"></div></div>
+  <div class="card">
+    <div class="row" style="margin-bottom:8px"><h2 style="margin:0">글별 진행 <span class="mini" id="sum"></span></h2>
+      <span style="flex:1"></span><span class="mini" id="selInfo">체크한 글만 한 번에 돌릴 수 있어요</span>
+      <button class="b p" id="bSelMake" disabled>선택한 글 딸깍</button></div>
+    <div class="scroll" style="max-height:none"><table><thead><tr>
+      <th><input type="checkbox" id="selAll"></th><th></th><th>#</th><th>카드 · 블로그 제목</th><th>글</th><th>Codex 그림</th><th>카드 그림</th><th>상태</th><th>이 글만</th>
+    </tr></thead><tbody id="rows"></tbody></table></div>
+  </div>
+</section>
+
+<!-- ── ③ 결과 보기 ── -->
+<section id="tab-view" class="hide">
+  <div class="grid-view">
+    <div class="card list" id="v-list"></div>
+    <div class="card" id="v-blog"></div>
+    <div class="card" id="v-edit"></div>
+  </div>
+</section>
+
+<!-- ── ④ 올리기·예약 ── -->
+<section id="tab-pub" class="hide">
+  <div class="card">
+    <h2>로그인</h2>
+    <div class="form">
+      <label>Codex (글·그림)</label><div class="row"><span id="a-codex">…</span><button class="b" id="a-codex-btn">Codex 로그인</button><button class="b" id="a-doctor">점검하기</button></div>
+      <label>네이버 계정</label><div class="row" id="a-accs"></div>
+      <label>계정 추가</label><div class="row"><input id="a-name" placeholder="이름 (영문, 예: dekman)" size="18"><input id="a-blog" placeholder="블로그 아이디 (blog.naver.com/ 뒤)" size="26"><button class="b" id="a-add">추가</button></div>
+      <label>올리는 화면</label><div class="row"><button class="b p" id="a-panel">게시 패널 열기</button><span class="mini">오른쪽에 좁은 패널, 왼쪽에 네이버 창이 나란히 떠요</span>
+        <button class="b" id="a-probe">글쓰기 화면 구조 확인</button></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>예약 추천 <span class="mini">— 유튜브처럼 미리 걸어 두기. 네이버 발행 창의 「예약」으로 넘겨서 PC 를 꺼도 발행돼요</span></h2>
+    <div class="row">
+      <label class="opt">패턴 <select id="p-pat"></select></label>
+      <label class="opt">시작 날짜 <input type="date" id="p-start"></label>
+      <label class="opt">몇 개 <input type="number" id="p-n" value="14" min="1" max="200" style="width:70px"></label>
+      <button class="b" id="p-preview">추천 보기</button><button class="b p" id="p-apply">이대로 예약 걸기</button>
+      <span class="mini" id="p-info"></span></div>
+    <div class="scroll" style="margin-top:10px"><table><thead><tr><th>시각</th><th>글</th></tr></thead><tbody id="p-rows"></tbody></table></div>
+  </div>
+  <div class="card">
+    <h2>예약·발행 기록</h2>
+    <div class="scroll"><table><thead><tr><th>시각</th><th>글</th><th>방식</th><th>상태</th><th></th></tr></thead><tbody id="s-rows"></tbody></table></div>
+  </div>
+</section>
+
+<!-- ── 설정 ── -->
+<section id="tab-goal" class="hide">
+  <div class="card"><h2>이 작업 (job.json)</h2><div class="form" id="g-job"></div>
+    <div class="row" style="margin-top:10px"><button class="b p" id="g-job-save">저장</button><button class="b" id="g-del" style="margin-left:auto;color:var(--bad)">이 작업 지우기</button></div></div>
+  <div class="card"><h2>전체 설정 <span class="mini">— 이 PC 에만 저장돼요 (aside.config.local.json)</span></h2><div class="form" id="g-set"></div>
+    <div class="row" style="margin-top:10px"><button class="b p" id="g-save">저장</button><button class="b" id="g-quit" style="margin-left:auto">프로그램 끄기</button></div></div>
+</section>
+</main>
+
+<div id="loginBar" class="hide">브라우저가 안 열렸나요? <a id="loginLink" target="_blank" class="b">로그인 페이지 열기</a> <button class="b s" id="loginClose">닫기</button></div>
+<div id="logbox"><div id="grip"></div>
+  <div class="hd"><span id="logst">대기 중</span><span><button id="btnStop">중지</button> <button id="btnClr">지우기</button></span></div>
+  <div id="log"></div></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const api = async (url, o = {}) => {
+  const r = await fetch(url, {method: o.method || "GET", headers: {"Content-Type": "application/json"},
+                             body: o.body ? JSON.stringify(o.body) : undefined});
+  if (!r.ok) { let m = r.statusText; try { m = (await r.json()).detail || m } catch {} ; alert(m); throw new Error(m) }
+  return r.json();
+};
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const md = s => esc(s).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
+const LS = { get(k, d) { try { return localStorage.getItem(k) ?? d } catch { return d } }, set(k, v) { try { localStorage.setItem(k, v) } catch {} } };
+const STATUS = {card: "카드", post: "글", ready: "올릴 준비", scheduled: "예약", posted: "발행", error: "오류"};
+let S = {tab: LS.get("tab", "dash"), job: LS.get("job", ""), sel: null, state: null, rows: null, picked: new Set()};
+
+async function loadState() {
+  S.state = await api("/api/state");
+  const st = S.state;
+  if (!st.jobs.find(j => j.name === S.job)) S.job = st.jobs[0]?.name || "";
+  $("#job").innerHTML = st.jobs.length ? st.jobs.map(j => `<option value="${esc(j.name)}" ${j.name === S.job ? "selected" : ""}>${esc(j.title)} (${esc(j.name)})</option>`).join("")
+    : `<option value="">작업 없음 — ① 교재·카드 탭</option>`;
+}
+async function checkTools() {
+  const c = await api("/api/codex").catch(() => null);
+  if (c) { $("#cxdot").className = "dot " + (c.authenticated ? "on" : "off");
+    $("#cxtxt").textContent = !c.installed ? "Codex 없음" : c.authenticated ? `Codex · ${c.email || "로그인됨"}` : "Codex 로그인 필요";
+    $("#a-codex").innerHTML = !c.installed ? `<span class="bad">Codex 가 설치되어 있지 않아요 — setup 을 다시 실행해 주세요</span>`
+      : c.authenticated ? `<span class="ok">✓ 로그인됨</span> ${esc(c.email || "")}` + (c.images === false ? ` <span class="mini">· 이 계정은 그림을 못 그려서 디자인 표지를 써요</span>` : "")
+      : `<span class="bad">✗ 로그인이 필요해요</span>`;
+    $("#a-codex-btn").className = "b" + (c.authenticated ? "" : " p"); }
+  const acc = S.state?.current;
+  if (acc) { const s = await api(`/api/accounts/${acc}/status`).catch(() => null);
+    if (s) { $("#nvdot").className = "dot " + (s.logged_in ? "on" : s.logged_in === false ? "off" : "");
+      $("#nvtxt").textContent = s.logged_in ? `네이버 · ${acc}` : s.logged_in === false ? "네이버 로그인 필요" : s.chrome ? `네이버 · ${acc}` : `네이버 창 닫힘 (${acc})`; } }
+  else { $("#nvtxt").textContent = "네이버 계정 없음" }
+}
+
+// ── 실행 · 로그 ──
+let logNext = 0, wasBusy = false;
+async function run(args, msg) { if (msg && !confirm(msg)) return; await api("/api/run", {method: "POST", body: {args}}); pollLog(); }
+async function pollLog() {
+  const r = await api(`/api/log?since=${logNext}`).catch(() => null);
+  if (!r) return;
+  logNext = r.next;
+  if (r.lines.length) {
+    r.lines = r.lines.filter(l => { const m = l.match(/LOGIN_URL (https:\/\/\S+)/); if (!m) return true;
+      $("#loginLink").href = m[1]; $("#loginBar").classList.remove("hide"); return false; });
+    const el = $("#log"); const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+    el.textContent += r.lines.join("\n") + "\n"; if (atBottom) el.scrollTop = el.scrollHeight;
+  }
+  const st = $("#logst");
+  st.textContent = r.busy ? `⏳ ${r.label} 하는 중…` : r.code == null ? "대기 중" : r.code === 0 ? "✓ 다 됐어요" : r.code === -1 ? "■ 멈춤" : "✗ 중간에 멈췄어요";
+  st.className = r.busy ? "run" : r.code === 0 ? "ok" : r.code > 0 ? "bad" : "";
+  document.querySelectorAll(".stage").forEach(c => c.classList.toggle("run", r.busy && r.cmd[0] === c.dataset.cmd));
+  if (wasBusy && !r.busy) { S.rows = null; await loadState(); refresh(); checkTools(); $("#loginBar").classList.add("hide") }
+  wasBusy = r.busy;
+}
+setInterval(pollLog, 1000);
+const setLogH = h => { h = Math.max(90, Math.min(Math.round(innerHeight * 0.85), h)); document.documentElement.style.setProperty("--logh", h + "px"); return h };
+(() => { setLogH(+LS.get("dlogh", 170)); let drag = null; const g = $("#grip");
+  g.addEventListener("pointerdown", e => { drag = {y: e.clientY, h: $("#logbox").offsetHeight}; g.setPointerCapture(e.pointerId) });
+  g.addEventListener("pointermove", e => { if (drag) setLogH(drag.h + (drag.y - e.clientY)) });
+  g.addEventListener("pointerup", () => { if (drag) { LS.set("dlogh", $("#logbox").offsetHeight); drag = null } }); })();
+
+// ── ① 교재·카드 ──
+async function pickInto(kind, input) {
+  const r = await api("/api/pick", {method: "POST", body: {kind, path: ""}}).catch(() => null);
+  if (!r) return;
+  if (kind === "files") { if (r.files?.length) $(input).value = r.files[0] }
+  else if (r.folder) { $(input).value = r.folder; if (r.kind !== "cards") alert("이 폴더에는 학습카드(NN_….html)가 없어요. 교재 PDF 라면 위 칸에서 골라 주세요.") }
+}
+$("#nj-pdf-pick").onclick = () => pickInto("files", "#nj-pdf");
+$("#nj-cards-pick").onclick = () => pickInto("folder", "#nj-cards");
+$("#nj-go").onclick = async () => {
+  const name = $("#nj-name").value.trim();
+  if (!name) return alert("작업 이름을 적어 주세요 (영문·숫자)");
+  await api("/api/jobs", {method: "POST", body: {name, pdf: $("#nj-pdf").value.trim(), cards: $("#nj-cards").value.trim(),
+    title: $("#nj-title").value.trim(), category: $("#nj-cat").value.trim()}});
+  S.job = name; LS.set("job", name); pollLog();
+};
+async function viewSrc() {
+  if (!S.job) { $("#src-info").innerHTML = `<div class="empty">아직 작업이 없어요. 위에서 교재 PDF 나 학습카드 폴더를 골라 작업을 만들어 주세요.</div>`; $("#toc-rows").innerHTML = ""; return }
+  const d = await api(`/api/jobs/${S.job}/cards`);
+  $("#src-info").innerHTML = `<h2>지금 작업: ${esc(d.title)}</h2><div class="mini">교재: <code>${esc(d.pdf || "없음")}</code> · 카드 폴더: <code>${esc(d.cards_dir || "없음")}</code></div>
+    <div class="row" style="margin-top:8px"><span class="tag ready">학습카드 ${d.rows.length}장</span><span class="tag">교재 조각 ${d.chunks}개</span>
+    ${d.skip.length ? `<span class="mini">건너뛰는 조각: ${esc(d.skip.join(", "))}</span>` : ""}</div>`;
+  $("#toc-open").href = `/jobs/${S.job}/cards/html/00_목차.html`;
+  const ch = await api(`/api/jobs/${S.job}/chunks`);
+  $("#toc-sum").textContent = ch.length ? `— 조각 ${ch.length}개 · 카드 있음 ${ch.filter(x => x.has).length}` : "— 교재 PDF 가 없거나 아직 글을 뽑지 않았어요";
+  let cur = "";
+  $("#toc-rows").innerHTML = ch.map(m => { const k = `${m.chapter}-${m.sec_no}`; const head = k !== cur; cur = k;
+    return `<tr><td><code>${esc(m.id)}</code></td><td>${head ? `<b>제${m.chapter}장</b> ${esc(m.chapter_name)} · ${m.sec_no}. ${esc(m.sec_name)}` : ""}</td>
+      <td>${esc(m.sub_name || "(절 본문)")}</td><td>${m.lines || ""}</td><td>${m.skip ? '<span class="mini">건너뜀</span>' : m.has ? '<span class="ok">✓</span>' : '<span class="warn">아직</span>'}</td></tr>` }).join("");
+}
+document.querySelectorAll("[data-run1]").forEach(b => b.onclick = () => {
+  if (!S.job) return alert("작업을 먼저 만들어 주세요");
+  const c = b.dataset.run1;
+  run([c, "--job", S.job], c === "s0-cards" ? "카드가 없는 조각만 Codex 로 학습카드를 써요 (조각 3개에 1~3분, 할당량을 써요). 진행할까요?" : null);
+});
+
+// ── ② 만들기 ──
+const STAGES = [
+  {c: "s1-post", n: "1 글 쓰기", k: "Codex", d: "학습카드 → 네이버 블로그 글(제목·도입·소제목·글머리·태그·그림 장면). 표·용어·OX 는 카드에서 그대로 붙여요."},
+  {c: "s2-imgjson", n: "2 그림 설명", k: "자동", d: "그림 장면에 바탕색·글자 금지 규칙을 붙여 그림 설명을 준비해요."},
+  {c: "s3-images", n: "3 그림 그리기", k: "Codex", d: "대표이미지 + 소제목 삽화. 이 계정이 그림을 못 그리면 건너뛰고 디자인 표지를 써요."},
+  {c: "s4-assets", n: "4 카드 그림·표지", k: "자동", d: "카드의 표·OX 정답을 그림으로 찍고, 디자인 표지(대표이미지 대체)를 만들어요."},
+  {c: "make", n: "딸깍", k: "1→4", d: "글 쓰기부터 카드 그림까지 한 번에. 이미 된 건 건너뛰어요.", p: true},
+];
+function opts(cmd) {
+  const a = [cmd, "--job", S.job]; const only = $("#o-only").value.trim();
+  if (only) a.push("--only", only); if ($("#o-force").checked) a.push("--force");
+  if ($("#o-limit").checked && (cmd === "s3-images" || cmd === "make")) a.push("--limit", "3");
+  if ($("#o-offline").checked && (cmd === "s1-post" || cmd === "make")) a.push("--offline");
+  return a;
+}
+function renderStages() {
+  $("#stages").innerHTML = STAGES.map(s => `<div class="stage" data-cmd="${s.c}"><div class="t">${s.n} <small>${s.k}</small></div><p>${s.d}</p>
+    <button class="b ${s.p ? "p" : ""}" data-run="${s.c}">실행</button></div>`).join("");
+  document.querySelectorAll("[data-run]").forEach(b => b.onclick = () => {
+    if (!S.job) return alert("작업을 먼저 만들어 주세요 (① 교재·카드)");
+    const c = b.dataset.run;
+    run(opts(c), c === "make" && !$("#o-only").value.trim() ? "모든 카드의 글·그림을 만들어요 (이미 된 건 건너뜀). 진행할까요?" : null);
+  });
+}
+const yes = (v, t = "✓") => v ? `<span class="ok">${t}</span>` : `<span class="no">—</span>`;
+async function viewDash() {
+  renderStages();
+  if (!S.job) { $("#rows").innerHTML = `<tr><td colspan="9"><div class="empty">작업이 없어요 — ① 교재·카드 탭에서 만들어 주세요</div></td></tr>`; return }
+  const d = await api(`/api/jobs/${S.job}/cards`);
+  S.rows = d.rows;
+  const cnt = k => d.rows.filter(r => r.status === k).length;
+  $("#sum").textContent = `— 카드 ${d.rows.length} · 글 ${d.rows.filter(r => r.steps.post).length} · 예약 ${cnt("scheduled")} · 발행 ${cnt("posted")}`;
+  $("#rows").innerHTML = d.rows.map(r => `<tr>
+    <td><input type="checkbox" data-pick="${r.id}" ${S.picked.has(r.id) ? "checked" : ""}></td>
+    <td>${r.cover ? `<span class="thumb" style="background-image:url('${r.cover}')"></span>` : ""}</td>
+    <td>${r.n}</td>
+    <td><b>${esc(r.title)}</b> <span class="mini">${esc(r.id)}</span><br><span class="mini">${esc(r.post_title || r.subtitle)}</span></td>
+    <td>${yes(r.steps.post)}</td><td>${r.steps.art.length ? `<span class="ok">${r.steps.art.length}장</span>` : yes(false)}</td>
+    <td>${yes(r.steps.assets)}</td>
+    <td><span class="tag ${r.status}">${STATUS[r.status] || r.status}</span>${r.error ? ` <span class="bad" title="${esc(r.error)}">!</span>` : ""}
+      ${r.scheduled?.when ? `<br><span class="mini">${esc(r.scheduled.when)}</span>` : ""}</td>
+    <td><button class="b s" data-one="${r.id}">딸깍</button> <button class="b s" data-see="${r.id}">보기</button></td></tr>`).join("");
+  document.querySelectorAll("[data-pick]").forEach(c => c.onchange = () => { c.checked ? S.picked.add(c.dataset.pick) : S.picked.delete(c.dataset.pick); selInfo() });
+  document.querySelectorAll("[data-one]").forEach(b => b.onclick = () => { $("#o-only").value = b.dataset.one; run(opts("make")) });
+  document.querySelectorAll("[data-see]").forEach(b => b.onclick = () => { S.sel = b.dataset.see; tab("view") });
+  selInfo();
+}
+function selInfo() { $("#bSelMake").disabled = !S.picked.size; $("#selInfo").textContent = S.picked.size ? `${S.picked.size}개 골랐어요` : "체크한 글만 한 번에 돌릴 수 있어요" }
+$("#selAll").onchange = e => { (S.rows || []).forEach(r => e.target.checked ? S.picked.add(r.id) : S.picked.delete(r.id)); viewDash() };
+$("#bSelMake").onclick = () => { $("#o-only").value = [...S.picked].join(","); run(opts("make")) };
+
+// ── ③ 결과 보기 ──
+async function viewView() {
+  if (!S.job) return;
+  if (!S.rows) S.rows = (await api(`/api/jobs/${S.job}/cards`)).rows;
+  if (!S.sel) S.sel = (S.rows.find(r => r.steps.post) || S.rows[0])?.id;
+  $("#v-list").innerHTML = S.rows.map(r => `<div class="it ${r.id === S.sel ? "on" : ""}" data-id="${r.id}"><b>#${r.n} ${esc(r.title)}</b>
+    <span>${esc(r.id)} · <span class="tag ${r.status}">${STATUS[r.status]}</span></span></div>`).join("");
+  document.querySelectorAll("#v-list .it").forEach(e => e.onclick = () => { S.sel = e.dataset.id; viewView() });
+  if (!S.sel) return;
+  const d = await api(`/api/jobs/${S.job}/cards/${S.sel}`);
+  S.detail = d;
+  const p = d.post;
+  if (!p) {
+    $("#v-blog").innerHTML = `<div class="empty">아직 블로그 글이 없어요. ② 만들기에서 「딸깍」을 눌러 주세요.</div>
+      ${d.card_html ? `<iframe class="cardf" src="${d.card_html}"></iframe>` : ""}`;
+    $("#v-edit").innerHTML = ""; return;
+  }
+  const html = d.blocks.map(b => b.type === "image" ? `<img src="${b.url}" alt="">`
+    : b.type === "heading" ? `<div class="hd">${md(b.text)}</div>`
+    : b.type === "paragraph" ? `<p>${md(b.text)}</p>` : b.type === "small" ? `<p class="sm">${md(b.text)}</p>`
+    : b.type === "quote" ? `<blockquote>${md(b.text)}</blockquote>`
+    : b.type === "list" ? (b.plain ? b.items.map(x => `<p>${md(x)}</p>`).join("") : `<ul>${b.items.map(x => `<li>${md(x)}</li>`).join("")}</ul>`) : "").join("");
+  $("#v-blog").innerHTML = `<div class="row" style="margin-bottom:10px"><span class="mini">네이버에 이렇게 들어가요 (카테고리: ${esc(p.category)})</span><span style="flex:1"></span>
+      ${d.card_html ? `<a class="b s" href="${d.card_html}" target="_blank">학습카드 원본</a>` : ""}</div>
+    <div class="blog"><h1>${esc(p.title)}</h1>${html}<div class="tagsx">${(p.tags || []).map(t => `<span>#${esc(t)}</span>`).join("")}</div></div>`;
+  editPanel(d);
+}
+function editPanel(d) {
+  const p = d.post;
+  const blocks = p.blocks.map((b, i) => (b.type === "paragraph" || b.type === "heading" || b.type === "quote") ?
+      `<div class="blk"><div class="k">${{paragraph: "문단", heading: "소제목", quote: "인용구"}[b.type]}</div><textarea rows="${b.type === "heading" ? 1 : 3}" data-bi="${i}">${esc(b.text)}</textarea></div>`
+    : b.type === "list" ? `<div class="blk"><div class="k">글머리 (한 줄에 하나)</div><textarea rows="${Math.min(8, b.items.length + 1)}" data-bl="${i}">${esc(b.items.join("\n"))}</textarea></div>` : "").join("");
+  const imgs = d.prompts.length ? d.prompts.map(it => `<div class="im"><div class="ph" style="background-image:url('${it.url}')"></div>
+      <div class="mini">${it.role === "cover" ? "대표이미지" : "삽화 " + it.role.slice(3)} ${it.has ? "✓" : "— 없음"}</div>
+      <div class="row"><button class="b s" data-copy="${esc(it.role)}">그림 설명 복사</button><label class="b s">그림 넣기<input type="file" accept="image/*" hidden data-up="${esc(it.role)}"></label>
+      ${it.has ? `<button class="b s" data-rm="${esc(it.role)}">빼기</button>` : ""}</div></div>`).join("")
+    : `<div class="mini">Codex 로 글을 쓰면 그림 설명이 생겨요. 지금 대표이미지는 디자인 표지예요.</div>`;
+  $("#v-edit").innerHTML = `<h2>고치기 ${d.overridden ? '<span class="tag scheduled">손본 글</span>' : ""}</h2>
+    <label class="f">제목 <span class="count" id="tcount"></span></label><input id="e-title" style="width:100%" value="${esc(p.title)}">
+    <label class="f">태그 (쉼표로, 최대 30개)</label><textarea id="e-tags" rows="2">${esc((p.tags || []).join(", "))}</textarea>
+    <label class="f">카테고리</label><input id="e-cat" style="width:100%" value="${esc(p.category || "")}">
+    <details><summary>본문 글 고치기</summary>${blocks}</details>
+    <div class="row" style="margin-top:10px"><button class="b p" id="e-save">저장</button>${d.overridden ? '<button class="b" id="e-reset">처음 글로 되돌리기</button>' : ""}</div>
+    <label class="f">그림</label><div class="imgs">${imgs}</div>
+    <label class="f">상태</label><div class="mini">${d.state.posted ? `발행됨 ${esc(d.state.posted.url || "")}` : d.state.scheduled ? `예약 ${esc(d.state.scheduled.when)}` : "아직 안 올렸어요"}</div>`;
+  const tc = () => { const n = $("#e-title").value.length; $("#tcount").textContent = `${n}자`; $("#tcount").className = "count" + (n > 60 ? " over" : "") }; tc();
+  $("#e-title").oninput = tc;
+  $("#e-save").onclick = async () => {
+    const blocks = JSON.parse(JSON.stringify(p.blocks));
+    document.querySelectorAll("[data-bi]").forEach(t => blocks[+t.dataset.bi].text = t.value.trim());
+    document.querySelectorAll("[data-bl]").forEach(t => blocks[+t.dataset.bl].items = t.value.split("\n").map(x => x.trim()).filter(Boolean));
+    await api(`/api/jobs/${S.job}/cards/${d.id}`, {method: "PUT", body: {patch: {title: $("#e-title").value.trim(), category: $("#e-cat").value.trim(),
+      tags: $("#e-tags").value.split(/[,\n]/).map(x => x.trim().replace(/^#/, "")).filter(Boolean).slice(0, 30), blocks}}});
+    viewView();
+  };
+  if ($("#e-reset")) $("#e-reset").onclick = async () => { if (!confirm("손본 내용을 지우고 처음 글로 되돌릴까요?")) return;
+    await api(`/api/jobs/${S.job}/cards/${d.id}/override`, {method: "DELETE"}); viewView() };
+  document.querySelectorAll("[data-copy]").forEach(b => b.onclick = async () => { const it = d.prompts.find(x => x.role === b.dataset.copy);
+    await navigator.clipboard.writeText(it.prompt); b.textContent = "복사됐어요" });
+  document.querySelectorAll("[data-up]").forEach(inp => inp.onchange = () => { const f = inp.files[0]; if (!f) return; const rd = new FileReader();
+    rd.onload = async () => { await api(`/api/jobs/${S.job}/images/${d.id}/${inp.dataset.up}`, {method: "POST", body: {data_url: rd.result}}); viewView() }; rd.readAsDataURL(f) });
+  document.querySelectorAll("[data-rm]").forEach(b => b.onclick = async () => { await api(`/api/jobs/${S.job}/images/${d.id}/${b.dataset.rm}`, {method: "DELETE"}); viewView() });
+}
+
+// ── ④ 올리기·예약 ──
+async function viewPub() {
+  const st = S.state;
+  $("#a-accs").innerHTML = st.accounts.length ? st.accounts.map(a => `<span class="row" style="gap:6px;border:1px solid var(--line);border-radius:10px;padding:4px 8px">
+      <label class="opt"><input type="radio" name="acc" value="${esc(a.name)}" ${a.name === st.current ? "checked" : ""}> <b>${esc(a.name)}</b></label>
+      <span class="mini">blog.naver.com/${esc(a.blog_id || a.name)}</span><button class="b s" data-login="${esc(a.name)}">로그인 창 열기</button></span>`).join("")
+    : `<span class="mini">아직 없어요 — 아래에서 추가해 주세요 (예: dekman)</span>`;
+  document.querySelectorAll("[name=acc]").forEach(r => r.onchange = async () => { await api(`/api/accounts/${r.value}/use`, {method: "POST"}); await loadState(); checkTools() });
+  document.querySelectorAll("[data-login]").forEach(b => b.onclick = () => api(`/api/accounts/${b.dataset.login}/login`, {method: "POST"}).then(pollLog));
+  const pats = await api("/api/patterns");
+  if (!$("#p-pat").options.length) $("#p-pat").innerHTML = pats.items.map(x => `<option value="${x.key}" ${x.key === pats.current ? "selected" : ""}>${esc(x.label)}</option>`).join("");
+  const sc = await api("/api/schedule");
+  $("#s-rows").innerHTML = sc.length ? sc.map(r => `<tr><td>${esc(r.when)}</td><td>${esc(r.title)} <span class="mini">${esc(r.job)}</span></td>
+      <td>${r.posted ? "발행" : r.mode === "native" ? "네이버 예약" : "이 프로그램 예약"}</td>
+      <td>${r.error ? `<span class="bad" title="${esc(r.error)}">오류</span>` : r.posted ? (r.url ? `<a href="${esc(r.url)}" target="_blank">글 보기</a>` : "✓") : "대기"}</td>
+      <td>${!r.posted && r.mode === "queue" ? `<button class="b s" data-cancel="${esc(r.job)}|${esc(r.data_id)}">취소</button>` : ""}</td></tr>`).join("")
+    : `<tr><td colspan="5"><div class="empty">아직 예약·발행한 글이 없어요</div></td></tr>`;
+  document.querySelectorAll("[data-cancel]").forEach(b => b.onclick = async () => { const [j, id] = b.dataset.cancel.split("|");
+    await api(`/api/schedule/${j}/${id}`, {method: "DELETE"}); viewPub() });
+}
+async function planCall(apply) {
+  if (!S.job) return alert("작업을 먼저 골라 주세요");
+  if (!S.state.current) return alert("네이버 계정을 먼저 추가해 주세요");
+  const ready = await api(`/api/jobs/${S.job}/ready`);
+  const ids = ready.slice(0, +$("#p-n").value || 14).map(r => r.id);
+  if (!ids.length) return alert("올릴 준비가 된 글이 없어요 — ② 만들기에서 「딸깍」을 먼저 눌러 주세요");
+  if (apply && !confirm(`${ids.length}개 글을 네이버에 예약 발행으로 걸어요. 왼쪽 네이버 창에서 하나씩 진행돼요 (글 하나에 1~2분). 진행할까요?`)) return;
+  const out = await api("/api/plan", {method: "POST", body: {job: S.job, account: S.state.current, apply, ids, pattern: $("#p-pat").value, start: $("#p-start").value}});
+  $("#p-rows").innerHTML = out.map(r => `<tr><td>${esc(r.when)} (${r.dow})</td><td>${esc(r.title)}</td></tr>`).join("");
+  $("#p-info").textContent = apply ? "예약을 거는 중이에요 — 아래 로그를 봐 주세요" : `${out.length}개 추천 · 올릴 준비된 글 ${ready.length}개`;
+}
+$("#p-preview").onclick = () => planCall(false);
+$("#p-apply").onclick = () => planCall(true);
+$("#a-add").onclick = async () => { await api("/api/accounts", {method: "POST", body: {name: $("#a-name").value.trim(), blog_id: $("#a-blog").value.trim()}}); await loadState(); viewPub() };
+$("#a-panel").onclick = () => api("/api/panel", {method: "POST"});
+$("#a-probe").onclick = () => run(["probe", "--account", S.state.current || ""], "왼쪽 네이버 창에서 글쓰기 화면을 열어 구조만 확인해요 (발행 안 함). 진행할까요?");
+$("#a-codex-btn").onclick = () => run(["codex-login"]);
+$("#a-doctor").onclick = () => run(["doctor"]);
+
+// ── 설정 ──
+const LABELS = {"post.title_max": "제목 최대 글자", "post.tags_max": "태그 최대 개수", "post.table_mode": "표 넣는 방식 (image|text|both)",
+  "post.terms_mode": "핵심 용어 (text|image)", "post.quiz_mode": "OX 정답 (image|text|both)", "post.section_images": "소제목 삽화 넣기",
+  "post.source_footer": "출처 문구 넣기", "image.per_post": "글 하나 그림 수(대표 포함)", "image.workers": "그림 동시에 그리기",
+  "naver.native_schedule": "네이버 예약 발행 쓰기", "naver.pattern": "예약 패턴", "naver.slots": "평일 시각 (쉼표)", "naver.weekend_slots": "주말 시각 (쉼표)",
+  "naver.category": "기본 카테고리", "naver.input_mode": "본문 넣기 (paste|type)", "naver.step_delay": "동작 사이 쉬는 초",
+  "effort.cards": "카드 쓰기 꼼꼼함 (low|medium|high)", "effort.post": "글 쓰기 꼼꼼함"};
+async function viewGoal() {
+  const s = await api("/api/settings");
+  S.set = s.values;
+  $("#g-set").innerHTML = Object.entries(s.values).flatMap(([sec, kv]) => Object.entries(kv).map(([k, v]) => {
+    const id = `${sec}.${k}`, lab = LABELS[id] || id;
+    const inp = typeof v === "boolean" ? `<input type="checkbox" data-set="${id}" ${v ? "checked" : ""}>`
+      : `<input data-set="${id}" value="${esc(Array.isArray(v) ? v.join(", ") : v)}" style="max-width:420px">`;
+    return `<label>${esc(lab)}</label>${inp}` })).join("");
+  if (S.job) { const m = await api(`/api/jobs/${S.job}/meta`);
+    $("#g-job").innerHTML = ["title", "book", "series", "source", "category"].map(k => `<label>${{title: "작업 제목", book: "카드 책 이름", series: "연재 문구", source: "출처 문구", category: "블로그 카테고리"}[k]}</label>
+      <input data-meta="${k}" value="${esc(m[k] || "")}">`).join("") + `<label>교재 PDF</label><code>${esc(m.pdf || "없음")}</code>`; }
+}
+$("#g-save").onclick = async () => {
+  const values = {};
+  document.querySelectorAll("[data-set]").forEach(i => { const [sec, k] = i.dataset.set.split("."); const old = S.set[sec][k];
+    let v = i.type === "checkbox" ? i.checked : Array.isArray(old) ? i.value.split(",").map(x => x.trim()).filter(Boolean) : typeof old === "number" ? +i.value : i.value.trim();
+    (values[sec] = values[sec] || {})[k] = v });
+  await api("/api/settings", {method: "PUT", body: {values}}); alert("저장했어요");
+};
+$("#g-job-save").onclick = async () => { const b = {}; document.querySelectorAll("[data-meta]").forEach(i => b[i.dataset.meta] = i.value);
+  await api(`/api/jobs/${S.job}/meta`, {method: "PUT", body: b}); await loadState(); alert("저장했어요") };
+$("#g-del").onclick = async () => { if (!S.job || !confirm(`「${S.job}」 작업을 지워요. 카드·글·그림·기록이 모두 사라져요 (원본 교재·카드 폴더는 그대로).`)) return;
+  await api(`/api/jobs/${S.job}`, {method: "DELETE"}); S.job = ""; await loadState(); tab("src") };
+$("#g-quit").onclick = async () => { if (!confirm("aside-blog 를 끌까요? 이 프로그램의 예약은 다음에 켤 때 이어서 올라가요 (네이버 예약 발행은 상관없어요).")) return;
+  await api("/api/quit", {method: "POST"}).catch(() => {}); document.body.innerHTML = '<div class="empty" style="margin:60px">껐어요. 다시 쓰려면 run.bat 을 누르세요.</div>' };
+
+// ── 탭 ──
+function tab(t) {
+  S.tab = t; LS.set("tab", t);
+  document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
+  document.querySelectorAll("main > section").forEach(s => s.classList.toggle("hide", s.id !== "tab-" + t));
+  refresh();
+}
+function refresh() { return ({src: viewSrc, dash: viewDash, view: viewView, pub: viewPub, goal: viewGoal}[S.tab] || viewDash)() }
+document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => tab(b.dataset.tab));
+$("#job").onchange = e => { S.job = e.target.value; LS.set("job", S.job); S.sel = null; S.rows = null; S.picked.clear(); refresh() };
+$("#loginClose").onclick = () => $("#loginBar").classList.add("hide");
+$("#btnStop").onclick = () => api("/api/stop", {method: "POST"});
+$("#btnClr").onclick = () => { $("#log").textContent = "" };
+setInterval(() => { if (S.tab === "dash" && !document.hidden) viewDash().catch(() => {}) }, 15000);
+loadState().then(() => tab(S.state.jobs.length ? S.tab : "src")); pollLog(); checkTools(); setInterval(checkTools, 60000);
+</script>
+</body>
+</html>

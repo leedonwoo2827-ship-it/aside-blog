@@ -1,0 +1,16 @@
+{
+  "post": {
+    "table_mode": "image",
+    "terms_mode": "text",
+    "quiz_mode": "image"
+  },
+  "naver": {
+    "native_schedule": true,
+    "pattern": "2-lunch",
+    "category": "변액보험판매관리사 133제"
+  },
+  "ui": {
+    "port": 5295,
+    "width": 460
+  }
+}

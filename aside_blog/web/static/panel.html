@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>aside-blog 게시 패널</title>
+<style>
+:root{--bg:#F6F1E8;--ink:#1d2433;--sub:#64748b;--line:#e5ded2;--pri:#03A94D;--nav:#1F4E79;--ok:#0f766e;--warn:#b45309;--bad:#b91c1c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard Variable",Pretendard,"Malgun Gothic",sans-serif;font-size:13.5px}
+header{background:var(--nav);color:#fff;padding:9px 12px;position:sticky;top:0;z-index:5}
+header .r{display:flex;gap:6px;align-items:center}
+header b{font-size:15px}
+header select{flex:1;min-width:0}
+.tabs{display:flex;gap:3px;margin-top:8px}
+.tabs button{flex:1;border:none;background:transparent;color:#dbe7f3;font:inherit;font-weight:700;padding:6px;border-radius:7px;cursor:pointer}
+.tabs button.on{background:#fff;color:var(--nav)}
+main{padding:10px 10px calc(var(--logh,150px) + 16px)}
+.box{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:10px}
+.it{display:flex;gap:8px;align-items:center;padding:7px;border-radius:8px;cursor:pointer;border:1px solid transparent}
+.it:hover{background:#faf7f1}.it.on{background:#eaf7ef;border-color:#9fe3bb}
+.it .th{width:58px;height:39px;flex:none;border-radius:5px;background:#EEE7DA center/cover no-repeat}
+.it b{display:block;font-size:12.5px;line-height:1.35}.it span{font-size:11.5px;color:var(--sub)}
+button.b,a.b,label.b{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 10px;cursor:pointer;font:inherit;font-weight:600;color:var(--ink);text-decoration:none;display:inline-block}
+button.p{background:var(--pri);color:#fff;border-color:var(--pri)}
+button.n{background:var(--nav);color:#fff;border-color:var(--nav)}
+button.w{width:100%;margin-top:6px}
+input,select{font:inherit;border:1px solid var(--line);border-radius:7px;padding:5px 7px;background:#fff;color:var(--ink)}
+.tag{font-size:11px;font-weight:700;border-radius:999px;padding:1px 7px;background:#EEE7DA}
+.tag.ready{background:#DDF1E6;color:var(--ok)}.tag.scheduled{background:#FFF1D6;color:var(--warn)}.tag.posted{background:#03A94D;color:#fff}.tag.error{background:#FBE3DC;color:var(--bad)}
+.mini{font-size:11.5px;color:var(--sub)}
+h3{font-size:13.5px;margin:2px 0 8px;color:var(--nav)}
+.hide{display:none!important}
+.cover{width:100%;aspect-ratio:3/2;border-radius:8px;background:#EEE7DA center/cover no-repeat;margin-bottom:8px}
+.row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.tabsel{border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin-top:6px;cursor:pointer;font-size:12px}
+.tabsel.on{border-color:var(--pri);background:#eaf7ef}
+#logbox{position:fixed;left:0;right:0;bottom:0;height:var(--logh,150px);background:#1E293B;color:#E2E8F0;font:11.5px/1.45 Consolas,monospace;display:flex;flex-direction:column;z-index:20}
+#logbox .hd{display:flex;justify-content:space-between;align-items:center;color:#94A3B8;padding:4px 10px}
+#logst.run{color:#FBBF24}#logst.ok{color:#4ADE80}#logst.bad{color:#F87171}
+#log{flex:1;overflow:auto;white-space:pre-wrap;padding:0 10px 6px}
+#logbox button{background:#334155;border:1px solid #475569;color:#fff;border-radius:6px;padding:1px 8px;font-size:11px;cursor:pointer}
+ol{padding-left:18px;margin:4px 0}li{margin:3px 0}
+</style>
+</head>
+<body>
+<header>
+  <div class="r"><b>네이버 블로그 올리기</b><span style="flex:1"></span><button class="b" id="bArr" title="창 다시 붙이기" style="padding:2px 8px">창 정렬</button></div>
+  <div class="r" style="margin-top:6px"><select id="job"></select><select id="acc"></select></div>
+  <div class="mini" style="color:#dbe7f3;margin-top:4px" id="who"></div>
+  <nav class="tabs"><button data-t="posts" class="on">글</button><button data-t="sched">예약</button><button data-t="help">도움말</button></nav>
+</header>
+<main>
+  <section id="t-posts">
+    <div class="box" id="detail"></div>
+    <div class="box"><h3>글 목록 <span class="mini" id="cnt"></span></h3><div id="list"></div></div>
+  </section>
+  <section id="t-sched" class="hide"><div class="box" id="sched"></div></section>
+  <section id="t-help" class="hide"><div class="box">
+    <h3>이렇게 써요</h3>
+    <ol>
+      <li>처음 한 번: 대시보드 ④ 에서 네이버 계정을 추가하고 「로그인 창 열기」 → 왼쪽 창에서 네이버 로그인(로그인 상태 유지 체크).</li>
+      <li>글을 고르고 <b>「미리 채워 보기」</b> — 왼쪽 창에 제목·본문·그림·발행 설정까지 채우고 <b>발행 직전에서 멈춰요.</b> 괜찮으면 직접 「발행」을 눌러도 돼요.</li>
+      <li>잘 들어가면 다음부터는 <b>「지금 발행」</b> 또는 <b>「예약」</b>. 예약은 네이버 발행 창의 예약으로 넘겨서 PC 를 꺼도 발행돼요.</li>
+      <li>직접 글쓰기 창을 열어 두었다면: <b>「현재 탭 선택하기」</b> → 그 창 고르기 → <b>「선택된 글쓰기창에 넣기」</b> (영상 속 방법과 같아요).</li>
+      <li>네이버 화면이 바뀌어 버튼을 못 찾으면: 대시보드 ④ 「글쓰기 화면 구조 확인」 결과를 담당자에게 보내 주세요.</li>
+    </ol>
+  </div></section>
+</main>
+<div id="logbox"><div class="hd"><span id="logst">대기 중</span><span><button id="btnStop">중지</button> <button id="btnClr">지우기</button></span></div><div id="log"></div></div>
+<script>
+const $ = s => document.querySelector(s);
+const api = async (url, o = {}) => {
+  const r = await fetch(url, {method: o.method || "GET", headers: {"Content-Type": "application/json"}, body: o.body ? JSON.stringify(o.body) : undefined});
+  if (!r.ok) { let m = r.statusText; try { m = (await r.json()).detail || m } catch {} ; alert(m); throw new Error(m) }
+  return r.json();
+};
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const LS = { get(k, d) { try { return localStorage.getItem(k) ?? d } catch { return d } }, set(k, v) { try { localStorage.setItem(k, v) } catch {} } };
+const STATUS = {card: "카드", post: "글", ready: "올릴 준비", scheduled: "예약", posted: "발행", error: "오류"};
+let S = {job: LS.get("job", ""), sel: null, st: null, tab: null};
+
+async function loadState() {
+  S.st = await api("/api/state");
+  if (!S.st.jobs.find(j => j.name === S.job)) S.job = S.st.jobs[0]?.name || "";
+  $("#job").innerHTML = S.st.jobs.map(j => `<option value="${esc(j.name)}" ${j.name === S.job ? "selected" : ""}>${esc(j.title)}</option>`).join("") || "<option>작업 없음</option>";
+  $("#acc").innerHTML = S.st.accounts.map(a => `<option value="${esc(a.name)}" ${a.name === S.st.current ? "selected" : ""}>${esc(a.name)}</option>`).join("") || "<option value=''>계정 없음</option>";
+}
+async function who() {
+  const a = S.st.current; if (!a) { $("#who").textContent = "네이버 계정을 대시보드 ④ 에서 추가해 주세요"; return }
+  const s = await api(`/api/accounts/${a}/status`).catch(() => null);
+  $("#who").textContent = !s ? "" : s.logged_in ? `✓ ${a} 로그인됨 · 왼쪽 창에서 진행돼요` : s.logged_in === false ? `✗ ${a} 네이버 로그인이 필요해요` : s.chrome ? `${a} · 작업 중` : `${a} 창이 닫혀 있어요 — 올리면 다시 떠요`;
+}
+async function list() {
+  if (!S.job) { $("#list").innerHTML = '<div class="mini">작업이 없어요</div>'; return }
+  const d = await api(`/api/jobs/${S.job}/cards`);
+  const rows = d.rows.filter(r => r.steps.post);
+  $("#cnt").textContent = `— 글 ${rows.length} · 발행 ${rows.filter(r => r.status === "posted").length}`;
+  if (!S.sel || !rows.find(r => r.id === S.sel)) S.sel = (rows.find(r => r.status === "ready") || rows[0])?.id;
+  $("#list").innerHTML = rows.map(r => `<div class="it ${r.id === S.sel ? "on" : ""}" data-id="${r.id}"><span class="th" style="background-image:url('${r.cover}')"></span>
+    <div><b>#${r.n} ${esc(r.post_title || r.title)}</b><span><span class="tag ${r.status}">${STATUS[r.status]}</span> ${r.scheduled?.when ? esc(r.scheduled.when) : ""}</span></div></div>`).join("")
+    || '<div class="mini">아직 블로그 글이 없어요 — 대시보드 ② 에서 「딸깍」</div>';
+  document.querySelectorAll(".it").forEach(e => e.onclick = () => { S.sel = e.dataset.id; S.tab = null; list() });
+  detail();
+}
+async function detail() {
+  if (!S.sel) { $("#detail").innerHTML = '<div class="mini">글을 골라 주세요</div>'; return }
+  const d = await api(`/api/jobs/${S.job}/cards/${S.sel}`);
+  const p = d.post, cover = d.blocks.find(b => b.type === "image" && b.slot === "cover");
+  const st = d.state;
+  $("#detail").innerHTML = `<div class="cover" style="background-image:url('${cover ? cover.url : ""}')"></div>
+    <b>${esc(p.title)}</b><div class="mini" style="margin:4px 0 8px">#${d.n} · ${esc(p.category)} · 태그 ${p.tags.length}개 · 그림 ${d.blocks.filter(b => b.type === "image").length}장</div>
+    ${st.posted ? `<div class="mini">✓ 발행됨 ${st.posted.url ? `<a href="${esc(st.posted.url)}" target="_blank">글 보기</a>` : ""}</div>` : st.scheduled ? `<div class="mini">⏰ 예약 ${esc(st.scheduled.when)} (${st.scheduled.mode === "native" ? "네이버 예약" : "이 프로그램"})</div>` : ""}
+    ${st.error ? `<div class="mini" style="color:var(--bad)">지난번 문제: ${esc(st.error)}</div>` : ""}
+    <button class="b w" id="bDry">미리 채워 보기 (발행 안 함)</button>
+    <button class="b p w" id="bNow">지금 발행</button>
+    <div class="row" style="margin-top:6px"><input type="datetime-local" id="when" value="${d.next_slot}" step="600" style="flex:1"><button class="b n" id="bAt">예약</button></div>
+    <div class="mini" style="margin-top:4px">예약은 10분 단위예요 · 추천: 다음 빈 자리</div>
+    <hr style="border:none;border-top:1px solid var(--line);margin:10px 0">
+    <b style="font-size:12.5px">내가 연 글쓰기 창에 넣기</b>
+    <button class="b w" id="bTabs">현재 탭 선택하기</button><div id="tabs"></div>
+    <button class="b w" id="bFill" ${S.tab == null ? "disabled" : ""}>선택된 글쓰기창에 넣기</button>`;
+  const acc = () => S.st.current || alert("네이버 계정을 먼저 추가해 주세요");
+  const go = (args, msg) => { if (msg && !confirm(msg)) return; api("/api/run", {method: "POST", body: {args}}).then(poll) };
+  $("#bDry").onclick = () => acc() && go(["post", "--job", S.job, "--only", S.sel, "--account", S.st.current, "--dry-run"]);
+  $("#bNow").onclick = () => acc() && go(["post", "--job", S.job, "--only", S.sel, "--account", S.st.current], `「${p.title}」을 지금 발행할까요?`);
+  $("#bAt").onclick = () => { if (!acc()) return; const w = $("#when").value; if (!w) return;
+    api("/api/schedule", {method: "POST", body: {job: S.job, data_id: S.sel, when: w.replace("T", " "), account: S.st.current, native: S.st.native}}).then(poll) };
+  $("#bTabs").onclick = async () => { if (!acc()) return; const t = await api(`/api/accounts/${S.st.current}/tabs`);
+    $("#tabs").innerHTML = t.length ? t.map(x => `<div class="tabsel ${S.tab === x.index ? "on" : ""}" data-tab="${x.index}">${esc(x.title || "글쓰기")}<br><span class="mini">${esc(x.url.slice(0, 60))}</span></div>`).join("")
+      : '<div class="mini" style="margin-top:6px">열린 글쓰기 창이 없어요. 왼쪽 창에서 「글쓰기」를 눌러 주세요.</div>';
+    document.querySelectorAll(".tabsel").forEach(e => e.onclick = () => { S.tab = +e.dataset.tab; document.querySelectorAll(".tabsel").forEach(x => x.classList.toggle("on", x === e)); $("#bFill").disabled = false }) };
+  $("#bFill").onclick = () => api("/api/fill", {method: "POST", body: {job: S.job, data_id: S.sel, account: S.st.current, tab: S.tab}}).then(poll);
+}
+async function sched() {
+  const sc = await api("/api/schedule");
+  $("#sched").innerHTML = `<h3>예약·발행</h3>` + (sc.map(r => `<div class="it" style="cursor:default"><div><b>${esc(r.when)}</b> <span class="tag ${r.posted ? "posted" : "scheduled"}">${r.posted ? "발행" : r.mode === "native" ? "네이버 예약" : "이 프로그램"}</span>
+      <span style="display:block">${esc(r.title)}</span>${r.error ? `<span style="color:var(--bad)">${esc(r.error)}</span>` : ""}</div></div>`).join("") || '<div class="mini">아직 없어요</div>');
+}
+let logNext = 0, wasBusy = false;
+async function poll() {
+  const r = await api(`/api/log?since=${logNext}`).catch(() => null); if (!r) return;
+  logNext = r.next;
+  if (r.lines.length) { const el = $("#log"); el.textContent += r.lines.filter(l => !l.startsWith("LOGIN_URL")).join("\n") + "\n"; el.scrollTop = el.scrollHeight }
+  const st = $("#logst");
+  st.textContent = r.busy ? `⏳ ${r.label} 하는 중…` : r.code == null ? "대기 중" : r.code === 0 ? "✓ 다 됐어요" : r.code === -1 ? "■ 멈춤" : "✗ 중간에 멈췄어요";
+  st.className = r.busy ? "run" : r.code === 0 ? "ok" : r.code > 0 ? "bad" : "";
+  if (wasBusy && !r.busy) { list(); who() }
+  wasBusy = r.busy;
+}
+setInterval(poll, 1000);
+document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => {
+  document.querySelectorAll(".tabs button").forEach(x => x.classList.toggle("on", x === b));
+  ["posts", "sched", "help"].forEach(t => $("#t-" + t).classList.toggle("hide", t !== b.dataset.t));
+  if (b.dataset.t === "sched") sched();
+});
+$("#job").onchange = e => { S.job = e.target.value; LS.set("job", S.job); S.sel = null; list() };
+$("#acc").onchange = async e => { await api(`/api/accounts/${e.target.value}/use`, {method: "POST"}); await loadState(); who() };
+$("#bArr").onclick = () => api("/api/arrange", {method: "POST", body: {account: S.st.current || ""}});
+$("#btnStop").onclick = () => api("/api/stop", {method: "POST"});
+$("#btnClr").onclick = () => { $("#log").textContent = "" };
+loadState().then(() => { list(); who() }); poll(); setInterval(() => S.st && who(), 30000);
+</script>
+</body>
+</html>
