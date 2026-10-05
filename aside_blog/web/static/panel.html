@@ -107,7 +107,8 @@ async function who() {
   $("#who").textContent = !s ? "" : s.logged_in ? `✓ ${a} 로그인됨 · 왼쪽 창에서 진행돼요` : s.logged_in === false ? `✗ ${a} 네이버 로그인이 필요해요` : s.chrome ? `${a} · 작업 중` : `${a} 창이 닫혀 있어요 — 올리면 다시 떠요`;
 }
 async function list() {
-  if (!S.job) { $("#list").innerHTML = '<div class="mini">작업이 없어요</div>'; return }
+  if (!S.job) { $("#list").innerHTML = '<div class="mini">작업이 없어요</div>';
+    $("#detail").innerHTML = '<div class="mini">아직 작업이 없어요. 대시보드 「① 교재·카드」에서 작업을 만들고 「② 만들기」에서 「딸깍」을 누르면 여기에 글이 나와요.</div>'; return }
   const d = await api(`/api/jobs/${S.job}/cards`);
   const rows = d.rows.filter(r => r.steps.post);
   $("#cnt").textContent = `— 글 ${rows.length} · 발행 ${rows.filter(r => r.status === "posted").length}`;
