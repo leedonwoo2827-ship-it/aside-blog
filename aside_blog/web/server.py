@@ -74,7 +74,8 @@ class Runner:
             self.proc = subprocess.Popen(
                 [child_python(), "-m", "aside_blog", *args], cwd=str(config.ROOT), env=env,
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8",
-                errors="replace", creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+                errors="replace", creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+                start_new_session=not sys.platform.startswith("win"))   # 맥·리눅스: 「중지」 때 자식(브라우저)까지 끄려고
             threading.Thread(target=self._pump, args=(self.proc,), daemon=True).start()
 
     def _pump(self, proc: subprocess.Popen) -> None:
@@ -97,7 +98,11 @@ class Runner:
                 subprocess.run(["taskkill", "/PID", str(self.proc.pid), "/T", "/F"],
                                capture_output=True, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
             else:
-                self.proc.terminate()
+                import signal
+                try:
+                    os.killpg(os.getpgid(self.proc.pid), signal.SIGTERM)
+                except Exception:       # noqa: BLE001
+                    self.proc.terminate()
 
 
 RUN = Runner()

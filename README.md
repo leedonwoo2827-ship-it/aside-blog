@@ -24,8 +24,19 @@
 
 ## 설치·실행 (팀원 PC)
 
-1. `setup.bat` — venv, 패키지, Chromium, 글꼴, 점검
-2. `run.bat` — 대시보드가 뜬다
+준비물: Python 3.11 이상, Google Chrome, Codex CLI(`npm i -g @openai/codex`).
+
+| | Windows | macOS · Linux |
+|---|---|---|
+| 처음 한 번 | `setup.bat` 더블클릭 | 터미널에서 `./setup.sh` |
+| 실행 | `run.bat` 더블클릭 | `./run.sh` |
+| 명령 | `run.bat make --job vb` | `./run.sh make --job vb` |
+
+- 리눅스는 폴더 고르기 창에 `python3-tk` 가 필요하다(`sudo apt install python3-tk`). 없으면 경로를 직접 붙여 넣으면 된다.
+- 맥은 단축키를 Cmd 로 보낸다(굵게·붙여넣기·전체 선택). 처음 실행 때 「터미널이 Chrome 을 제어」 권한을 물으면 허용한다.
+
+1. `setup.bat` / `./setup.sh` — venv, 패키지, Chromium, 글꼴, 점검
+2. `run.bat` / `./run.sh` — 대시보드가 뜬다
 3. 대시보드 ④ → **Codex 로그인** (회사 ChatGPT 계정)
 4. ④ → 네이버 계정 추가(이름 `dekman`, 블로그 아이디 `dekman`) → **로그인 창 열기** → 왼쪽 Chrome 에서 네이버 로그인(로그인 상태 유지)
 5. ① 에서 교재 PDF 또는 학습카드 폴더로 작업 만들기 → ② 「딸깍」 → ③ 확인·고치기 → ④ 「게시 패널 열기」
@@ -47,7 +58,7 @@ jobs/<job>/
   state.json            발행·예약 기록
 ```
 
-## 명령 (run.bat <명령> = python -m aside_blog <명령>)
+## 명령 (run.bat <명령> = ./run.sh <명령> = python -m aside_blog <명령>)
 
 ```
 new vb --pdf 교재.pdf --cards 카드폴더      둘 다: 카드를 교재의 결과물로 강제로 넣기(할당량 0)

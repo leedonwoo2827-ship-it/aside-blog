@@ -17,6 +17,7 @@ from __future__ import annotations
 import base64
 import html as _html
 import re
+import sys
 import time
 from datetime import datetime
 from pathlib import Path
@@ -72,6 +73,12 @@ TEXT: Dict[str, Any] = {
     "photo": re.compile(r"^사진$"),
     "quote": re.compile(r"^인용구$"),
 }
+
+
+# 단축키 — 맥은 Cmd(Meta), 윈도우·리눅스는 Ctrl. 줄 끝으로 가기도 맥은 Cmd+→ (맥의 End 는 화면만 내린다)
+MAC = sys.platform == "darwin"
+MOD = "Meta" if MAC else "Control"
+LINE_END = "Meta+ArrowRight" if MAC else "End"
 
 
 class PostError(RuntimeError):
@@ -226,13 +233,13 @@ def caret_end(fr, page) -> None:
     if last is not None and "se-text" not in (last.get_attribute("class") or ""):
         last.click()
         page.keyboard.press("ArrowDown")
-        page.keyboard.press("End")
+        page.keyboard.press(LINE_END)
         page.keyboard.press("Enter")
         return
     paras = fr.locator(SEL["body_para"])
     if paras.count():
         paras.last.click()
-        page.keyboard.press("End")
+        page.keyboard.press(LINE_END)
 
 
 def _text_len(fr) -> int:
@@ -252,7 +259,7 @@ def paste_html(fr, page, html_s: str, text_s: str) -> bool:
         fr.evaluate("""([h, t]) => navigator.clipboard.write([new ClipboardItem({
               'text/html': new Blob([h], {type: 'text/html'}), 'text/plain': new Blob([t], {type: 'text/plain'})})])""",
                     [html_s, text_s])
-        page.keyboard.press("Control+V")
+        page.keyboard.press(f"{MOD}+V")
         time.sleep(1.0)
         if _text_len(fr) > before + 5:
             return True
@@ -277,11 +284,11 @@ def type_blocks(page, blocks: List[Dict[str, Any]]) -> None:
     def rich(text: str) -> None:
         for k, seg in enumerate(re.split(r"\*\*", text or "")):
             if k % 2:
-                kb.press("Control+B")
+                kb.press(f"{MOD}+B")
             if seg:
                 kb.insert_text(seg)
             if k % 2:
-                kb.press("Control+B")
+                kb.press(f"{MOD}+B")
         kb.press("Enter")
 
     for b in blocks:
@@ -360,7 +367,7 @@ def fill(s: NaverSession, fr, post: Dict[str, Any], blocks: List[Dict[str, Any]]
     delay = float(config.load()["naver"].get("step_delay", 0.4))
     log("  제목을 넣어요")
     _click(fr, SEL["title"], None, timeout=15_000)
-    page.keyboard.press("Control+A")
+    page.keyboard.press(f"{MOD}+A")
     page.keyboard.insert_text(post["title"])
     time.sleep(delay)
     # 본문 첫 칸으로

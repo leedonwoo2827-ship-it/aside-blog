@@ -162,6 +162,10 @@ def cmd_doctor(_a=None) -> int:
         log(f"✗ {e}")
         bad += 1
     log("✓ 교재 글 뽑기 준비됨" if shutil.which("pdftotext") else "✓ 교재 글 뽑기 준비됨 (기본 방식)")
+    try:
+        import tkinter  # noqa: F401
+    except Exception:
+        log("△ 폴더 고르기 창을 띄울 수 없어요 — 경로를 직접 붙여 넣으면 돼요 (리눅스: sudo apt install python3-tk)")
     fonts = config.TEMPLATES / "fonts" / "Pretendard-Bold.woff2"
     log("✓ 글꼴 확인" if fonts.exists() else "△ 글꼴이 없어요 — setup 을 다시 실행해 주세요")
     accs = accounts.all_()
